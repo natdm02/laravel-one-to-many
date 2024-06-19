@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ProjectRequest;
 use Illuminate\Http\Request;
 use App\Models\Project;
+use App\Models\Type;
+use Illuminate\Support\Facades\Storage;
 
 class ProjectController extends Controller
 {
@@ -14,11 +16,20 @@ class ProjectController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+
     public function index()
     {
-        $projects = Project::paginate(10);
-        return view('admin.projects.index', compact('projects'));
+        $direction = 'asc';
+        $projects = Project::orderBy('id', $direction)->paginate(10);
+        return view('admin.projects.index', compact('projects', 'direction'));
+    }
 
+    public function orderBy($direction)
+    {
+
+        $direction = $direction === 'asc' ? 'desc' : 'asc';
+        $projects = Project::orderBy('id', $direction)->paginate(10);
+        return view('admin.projects.index', compact('projects', 'direction'));
     }
 
     /**
@@ -28,7 +39,8 @@ class ProjectController extends Controller
      */
     public function create()
     {
-        return view('admin.project.create');
+        $project_type = Type::all();
+        return view('admin.projects.create', compact('project_type'));
     }
 
     /**
@@ -42,6 +54,13 @@ class ProjectController extends Controller
         $form_data = $request->all();
 
         $form_data['slug'] = Project::generateSlug($form_data['name']);
+
+        if(array_key_exists('image', $form_data)) {
+
+            $form_data['image_original_name'] = $request->file('image')->getClientOriginalName();
+
+            $form_data['image_path'] = Storage::put('uploads', $form_data['image']);
+        }
 
         $new_project = new Project();
 
@@ -60,7 +79,8 @@ class ProjectController extends Controller
      */
     public function show(Project $project)
     {
-        //
+        $project_type = Type::all();
+        return view('admin.projects.show', compact('project', 'project_type'));
     }
 
     /**
@@ -69,9 +89,11 @@ class ProjectController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit(Project $project)
+
     {
-        return view('admin.projects.show', compact('project'));
+        $project_type = Type::all();
+        return view('admin.projects.edit', compact('project','project_type'));
     }
 
     /**
@@ -81,9 +103,26 @@ class ProjectController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(ProjectRequest $request, Project $project)
     {
-        //
+        $form_data = $request->all();
+
+        if($form_data['name'] !== $project->name){
+            $form_data['slug'] = Project::generateSlug($form_data['name']);
+        }else{
+            $form_data['slug'] = $project->slug;
+        }
+
+        if(array_key_exists('image', $form_data)) {
+
+            $form_data['image_original_name'] = $request->file('image')->getClientOriginalName();
+
+            $form_data['image_path'] = Storage::put('uploads', $form_data['image']);
+        }
+
+        $project->update(($form_data));
+
+        return redirect()->route('admin.projects.show', $project);
     }
 
     /**
@@ -94,8 +133,12 @@ class ProjectController extends Controller
      */
     public function destroy(Project $project)
     {
+        if($project->image_path) {
+            Storage::disk('public')->delete($project->image_path);
+        }
+
         $project->delete();
 
-        return redirect()->route('admin.projects.index')->with('deleted', "The Project -> $project->name has been succesfully deleted");
+        return redirect()->route('admin.projects.index')->with('deleted', "The Project '$project->name' <- has been succesfully deleted");
     }
 }

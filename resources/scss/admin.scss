@@ -1,4 +1,4 @@
-@import "~bootstrap/scss/bootstrap";
+@import "bootstrap/scss/bootstrap";
 
 a {
     text-decoration: none;
@@ -40,4 +40,8 @@ aside {
             }
         }
     }
+}
+
+.ck-editor__editable_inline {
+    min-height: 200px;
 }

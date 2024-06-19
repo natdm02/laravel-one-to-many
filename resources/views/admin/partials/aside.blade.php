@@ -12,5 +12,18 @@
                 Projects
             </a>
         </li>
+        <li>
+            <a href="{{ route('admin.projects.create') }}" class="{{ Route::currentRouteName() === 'admin.projects.create' ? 'active' : '' }}">
+                <i class="fa-solid fa-square-plus fa-lg me-2"></i>
+                Add a New Project
+            </a>
+        </li>
+        <hr class="text-secondary">
+        <li class="ms-2">
+            <a href="{{ route('admin.types.index') }}" class="{{ str_contains( Route::currentRouteName(), 'admin.types') ? 'active' : '' }}">
+                <i class="fa-solid fa-font-awesome fa-lg me-2"></i>
+                Project Types
+            </a>
+        </li>
     </ul>
 </aside>

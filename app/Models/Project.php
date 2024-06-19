@@ -26,11 +26,18 @@ class Project extends Model
         return $slug;
     }
     protected $fillable = [
+        'type_id',
         'name',
+        'image_path',
+        'image_original_name',
         'description',
         'category',
         'start_date',
         'end_date',
+        'is_closed',
         'slug'
     ];
+    public function type() {
+        return $this->belongsTo(Type::class);
+    }
 }
